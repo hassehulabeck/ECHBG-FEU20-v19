@@ -27,33 +27,63 @@ db.once('open', () => {
 
 // Routes
 
-app.get('/', async(req, res) => {
-    const result = await Book.find({}, { _id: 0, title: 1 })
-    res.json(result)
+app.get('/books', (req, res) => {
+    Book.find({})
+        .populate('author')
+        .exec(function(err, books) {
+            if (err) console.error(err)
+
+            let result = ""
+                // .find() returnerar en array, därför forEach
+            books.forEach(book => {
+                result += book.author[0].lastName + " skrev " + book.title
+            })
+            res.send(result)
+        })
 })
 
+app.get('/authors', async(req, res) => {
+    const result = await Author.find({})
+        .populate('book')
+        .exec(function(err, author) {
+            if (err) console.error(err)
+
+            res.json(author)
+        })
+})
+
+
 app.post('/', (req, res) => {
+
+    // Skapa först ett objekt av vardera typ (bok och författare)
+
     const author = new Author({
         _id: new mongoose.Types.ObjectId(),
         firstName: req.body.firstName,
-        lastName: req.body.lastName
+        lastName: req.body.lastName,
     })
 
+    const book = new Book({
+        title: req.body.title,
+        isbn: req.body.isbn,
+        author: author._id
+    })
+
+    // Spara därefter författaren. 
     author.save((err) => {
         if (err) console.error(err)
 
-        const book = new Book({
-            title: req.body.title,
-            isbn: req.body.isbn,
-            author: author._id
-        })
-
+        // När detta är gjort kan du spara boken.
         book.save((err) => {
             if (err) console.error(err)
 
         })
         res.json(book)
     })
+
+    // Avsluta med att "uppdatera" värdet på books i author-objektet. 
+    author.books.push(book)
+
 })
 
 
