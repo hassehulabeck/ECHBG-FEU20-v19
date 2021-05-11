@@ -27,6 +27,34 @@ db.once('open', () => {
 
 // Routes
 
+app.get('/', async(req, res) => {
+    const result = await Book.find({}, { _id: 0, title: 1 })
+    res.json(result)
+})
+
+app.post('/', (req, res) => {
+    const author = new Author({
+        _id: new mongoose.Types.ObjectId(),
+        firstName: req.body.firstName,
+        lastName: req.body.lastName
+    })
+
+    author.save((err) => {
+        if (err) console.error(err)
+
+        const book = new Book({
+            title: req.body.title,
+            isbn: req.body.isbn,
+            author: author._id
+        })
+
+        book.save((err) => {
+            if (err) console.error(err)
+
+        })
+        res.json(book)
+    })
+})
 
 
 app.listen(3000, () => {

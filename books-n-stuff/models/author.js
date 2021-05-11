@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 
 const authorSchema = mongoose.Schema({
+    _id: mongoose.Types.ObjectId,
     firstName: String,
     lastName: String,
 })
