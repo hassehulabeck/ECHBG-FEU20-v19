@@ -78,8 +78,17 @@ app.post('/', (req, res) => {
             if (err) console.error(err)
 
         })
-        res.json(book)
+
+        // Validering
+        const error = book.validateSync()
+
+        if (error) {
+            res.send(error)
+        } else {
+            res.json(book)
+        }
     })
+
     author.books.push(book._id)
 })
 
