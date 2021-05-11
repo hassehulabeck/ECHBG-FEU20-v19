@@ -7,7 +7,16 @@ const bookSchema = mongoose.Schema({
     },
     regnr: {
         type: String,
-        match: /[A-Z]{3}[0-9]{3}/
+        match: /^[A-Z]{3}\d{3}$/,
+    },
+    price: {
+        type: Number,
+        validate: {
+            validator: function(v) {
+                // Priset ska vara jämnt delbart med 10, annars får det vara. 
+                return v % 10 == 0
+            }
+        }
     },
     isbn: {
         type: String,

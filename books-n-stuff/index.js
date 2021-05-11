@@ -68,7 +68,9 @@ app.post('/', (req, res) => {
     const book = new Book({
         title: req.body.title,
         isbn: req.body.isbn,
-        author: author._id
+        author: author._id,
+        regnr: req.body.regnr,
+        price: req.body.price
     })
 
     author.save((err) => {
