@@ -6,7 +6,7 @@ require('dotenv').config()
     /* Dotenv behöver inte läggas i någon variabel. Istället kommer vi åt objektet process.env som i sin tur innehåller egenskaperna i .env-filen */
 
 app.use(express.urlencoded({ extended: true }))
-app.use(cookieParser)
+app.use(cookieParser())
 
 const payload = {
     iss: 'zocom',
@@ -46,10 +46,10 @@ app.get('/public', (req, res) => {
 
 // Secret kan ses av alla inloggade som har role==admin
 app.get('/secret', (req, res) => {
-    if (!req.header('authorization')) {
+    if (!req.cookies['auth-token']) {
         res.send("Bara för inloggade.")
     } else {
-        const token = req.header('authorization').split(" ")[1]
+        const token = req.cookies['auth-token']
         jwt.verify(token, process.env.SECRET, (err, payload) => {
             if (err) {
                 res.json(err)
