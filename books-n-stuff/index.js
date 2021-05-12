@@ -49,7 +49,8 @@ app.get('/authors', async(req, res) => {
 
 app.get('/books/:id', async(req, res) => {
     const book = await Book.findById(req.params.id).populate('author')
-    res.send(`${book.title} (${book.isbn}) är författad av ${book.author[0].lastName}`)
+        // res.send(`${book.title} (${book.isbn}) är författad av ${book.author[0].lastName}`)
+    res.json(book)
 })
 
 app.get('/authors/:id', async(req, res) => {
