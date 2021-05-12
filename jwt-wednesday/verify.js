@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken')
 require('dotenv').config()
 const app = require('express')()
 
-const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MjA4MTYxOTEsInJvbGUiOiJyZWd1bGFyIiwiaXNzIjoiem9jb20iLCJpYXQiOjE2MjA4MTI1OTF9.ZeNaWG_3cjx2-CX8Rd7SJb1F9hFo4EPi0OHQtEAQbDw"
+// const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MjA4MTYxOTEsInJvbGUiOiJyZWd1bGFyIiwiaXNzIjoiem9jb20iLCJpYXQiOjE2MjA4MTI1OTF9.ZeNaWG_3cjx2-CX8Rd7SJb1F9hFo4EPi0OHQtEAQbDw"
 
 
 const options = {
@@ -10,6 +10,12 @@ const options = {
 }
 
 app.get('/', (req, res) => {
+
+    console.log(req.header('authorization'))
+
+    // Splittra strängen med mellanslag, hämta element 1 ur resultat-arrayen.
+    const token = req.header('authorization').split(" ")[1]
+    console.log(token)
 
     jwt.verify(token, process.env.PW, options, (err, payload) => {
         if (err) {
