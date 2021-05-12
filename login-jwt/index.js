@@ -2,11 +2,26 @@ const express = require('express')
 const app = express()
 const jwt = require('jsonwebtoken')
 const cookieParser = require('cookie-parser')
+const mongoose = require('mongoose')
+const User = require('./user')
+
 require('dotenv').config()
     /* Dotenv behöver inte läggas i någon variabel. Istället kommer vi åt objektet process.env som i sin tur innehåller egenskaperna i .env-filen */
 
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
+
+// Uppkoppling till db
+mongoose.connect('mongodb://localhost:27017', { useUnifiedTopology: true, urlencoded: true, dbName: 'login-jwt' })
+
+const db = mongoose.connection
+
+db.on('error', (err) => {
+    console.error(err)
+})
+db.once('open', () => {
+    console.log("Db ansluten.")
+})
 
 const payload = {
     iss: 'zocom',
@@ -15,8 +30,11 @@ const payload = {
 }
 
 app.post('/login', (req, res) => {
-    // Kolla om inlogg är rätt.
-    if (req.body.user == process.env.USER && req.body.pw == process.env.PW) {
+
+    // Hämta data & kolla om inlogg är rätt.
+    const user = User.findOne({ user: req.body.user, pw: req.body.pw })
+
+    if (user.role) {
 
         // I så fall, signa och skicka token.
         const token = jwt.sign(payload, process.env.SECRET)
