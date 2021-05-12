@@ -12,7 +12,7 @@ app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 
 // Uppkoppling till db
-mongoose.connect('mongodb://localhost:27017', { useUnifiedTopology: true, urlencoded: true, dbName: 'login-jwt' })
+mongoose.connect('mongodb://localhost:27017', { useUnifiedTopology: true, useNewUrlParser: true, dbName: 'login-jwt' })
 
 const db = mongoose.connection
 
@@ -23,18 +23,19 @@ db.once('open', () => {
     console.log("Db ansluten.")
 })
 
-const payload = {
-    iss: 'zocom',
-    exp: Math.floor(Date.now() / 1000) + (60 * 5),
-    role: 'superuser'
-}
 
-app.post('/login', (req, res) => {
+app.post('/login', async(req, res) => {
 
     // Hämta data & kolla om inlogg är rätt.
-    const user = User.findOne({ user: req.body.user, pw: req.body.pw })
+    const user = await User.findOne({ user: req.body.user, pw: req.body.pw })
 
-    if (user.role) {
+    if (user) {
+
+        const payload = {
+            iss: 'zocom',
+            exp: Math.floor(Date.now() / 1000) + (60 * 5),
+            role: user.role
+        }
 
         // I så fall, signa och skicka token.
         const token = jwt.sign(payload, process.env.SECRET)
