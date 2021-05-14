@@ -33,18 +33,19 @@ app.post('/register', (req, res) => {
         if (err) res.json(err)
         else {
             const newUser = new User({
-                name: req.body.name,
+                username: req.body.username,
                 password: hash,
                 role: 'regular'
             })
+
+            newUser.save((err) => {
+                if (err) res.json(err)
+                else {
+                    res.json(newUser)
+                }
+            })
         }
 
-        newUser.save((err) => {
-            if (err) res.json(err)
-            else {
-                res.json(newUser)
-            }
-        })
     })
 
 })
@@ -53,27 +54,32 @@ app.post('/register', (req, res) => {
 app.post('/login', async(req, res) => {
 
     // Hämta data för den användare som har det namn som skrivits in
-    const user = await User.findOne({ name: req.body.name })
+    const user = await User.findOne({ username: req.body.username })
 
-    // Kolla om lösenordet stämmer. 
-    bcrypt.compare(req.body.password, user.password, function(err, result) {
-        if (err) res.json({ user, mess: "dina uppgifter stämde inte" })
-        else {
+    if (user) {
+        // Kolla om lösenordet stämmer. 
+        bcrypt.compare(req.body.password, user.password, function(err, result) {
+            if (err) res.json(err)
 
-            const payload = {
-                iss: 'zocom',
-                exp: Math.floor(Date.now() / 1000) + (60 * 5),
-                role: user.role
+            if (result !== false) {
+                console.log(result)
+                const payload = {
+                    iss: 'zocom',
+                    exp: Math.floor(Date.now() / 1000) + (60 * 5),
+                    role: user.role
+                }
+
+                // I så fall, signa och skicka token.
+                const token = jwt.sign(payload, process.env.SECRET)
+                res.cookie('auth-token', token)
+                res.send("Välkommen " + user.username)
+
+            } else {
+                res.send("Dina credentials stämde inte")
             }
+        })
 
-            // I så fall, signa och skicka token.
-            const token = jwt.sign(payload, process.env.SECRET)
-            res.cookie('auth-token', token)
-            res.json(token)
-
-        }
-
-    })
+    }
 
 })
 
