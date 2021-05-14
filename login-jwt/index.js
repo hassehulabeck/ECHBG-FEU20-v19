@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken')
 const cookieParser = require('cookie-parser')
 const mongoose = require('mongoose')
 const User = require('./user')
+const bcrypt = require('bcrypt')
+const saltRounds = 10
 
 require('dotenv').config()
     /* Dotenv behöver inte läggas i någon variabel. Istället kommer vi åt objektet process.env som i sin tur innehåller egenskaperna i .env-filen */
@@ -24,26 +26,55 @@ db.once('open', () => {
 })
 
 
-app.post('/login', async(req, res) => {
+// Registrera användare
+app.post('/register', (req, res) => {
 
-    // Hämta data & kolla om inlogg är rätt.
-    const user = await User.findOne({ user: req.body.user, pw: req.body.pw })
-
-    if (user) {
-
-        const payload = {
-            iss: 'zocom',
-            exp: Math.floor(Date.now() / 1000) + (60 * 5),
-            role: user.role
+    bcrypt.hash(req.body.password, saltRounds, (err, hash) => {
+        if (err) res.json(err)
+        else {
+            const newUser = new User({
+                name: req.body.name,
+                password: hash,
+                role: 'regular'
+            })
         }
 
-        // I så fall, signa och skicka token.
-        const token = jwt.sign(payload, process.env.SECRET)
-        res.cookie('auth-token', token)
-        res.json(token)
-    } else {
-        res.send("Dina uppgifter stämde inte.")
-    }
+        newUser.save((err) => {
+            if (err) res.json(err)
+            else {
+                res.json(newUser)
+            }
+        })
+    })
+
+})
+
+
+app.post('/login', async(req, res) => {
+
+    // Hämta data för den användare som har det namn som skrivits in
+    const user = await User.findOne({ name: req.body.name })
+
+    // Kolla om lösenordet stämmer. 
+    bcrypt.compare(req.body.password, user.password, function(err, result) {
+        if (err) res.json({ user, mess: "dina uppgifter stämde inte" })
+        else {
+
+            const payload = {
+                iss: 'zocom',
+                exp: Math.floor(Date.now() / 1000) + (60 * 5),
+                role: user.role
+            }
+
+            // I så fall, signa och skicka token.
+            const token = jwt.sign(payload, process.env.SECRET)
+            res.cookie('auth-token', token)
+            res.json(token)
+
+        }
+
+    })
+
 })
 
 // Public kan ses av alla inloggade
